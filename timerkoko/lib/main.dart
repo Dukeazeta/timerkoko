@@ -54,7 +54,7 @@ class TimerScreen extends StatelessWidget {
                   Text(
                     '${controller.selectedMinutes}',
                     style: GoogleFonts.spaceGrotesk(
-                      fontSize: 72,
+                      fontSize: 96,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -62,7 +62,7 @@ class TimerScreen extends StatelessWidget {
                   Text(
                     'MIN',
                     style: GoogleFonts.spaceGrotesk(
-                      fontSize: 16,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 2,
                       color: Colors.black87,
@@ -106,6 +106,12 @@ class TimerScreen extends StatelessWidget {
                           icon: Icon(
                             controller.isRunning ? Icons.pause : Icons.play_arrow,
                             size: 32,
+                            color: Colors.white,
+                          ),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(48, 48),
                           ),
                           onPressed: controller.toggleTimer,
                         ),
@@ -136,15 +142,28 @@ class CustomTimerPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
+    // Draw progress arc
+    final progressPaint = Paint()
+      ..color = isRunning ? Colors.red : Colors.red[400]!
+      ..style = PaintingStyle.fill;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius - 15),
+      -math.pi / 2,
+      2 * math.pi * progress,
+      true,
+      progressPaint,
+    );
+
     // Draw minute markers
     final markerPaint = Paint()
-      ..color = Colors.black12
+      ..color = Colors.black87
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+      ..strokeWidth = 2.5;
 
     for (var i = 0; i < 60; i++) {
       final angle = i * (2 * math.pi / 60) - math.pi / 2;
-      final markerLength = i % 5 == 0 ? 15.0 : 8.0;
+      final markerLength = i % 5 == 0 ? 20.0 : 10.0;
       final markerStart = radius - markerLength;
       final markerEnd = radius;
       
@@ -153,10 +172,15 @@ class CustomTimerPainter extends CustomPainter {
       final endX = center.dx + markerEnd * math.cos(angle);
       final endY = center.dy + markerEnd * math.sin(angle);
       
+      // Use white color for markers over the red progress area
+      final markerAngle = (angle + math.pi / 2) / (2 * math.pi);
+      final isOverProgress = markerAngle <= progress;
+      markerPaint.color = isOverProgress ? Colors.white : Colors.black87;
+      
       canvas.drawLine(
         Offset(startX, startY),
         Offset(endX, endY),
-        markerPaint,
+        markerPaint..strokeWidth = i % 5 == 0 ? 3.0 : 2.5,
       );
 
       // Draw minute numbers
@@ -166,16 +190,16 @@ class CustomTimerPainter extends CustomPainter {
           text: TextSpan(
             text: number.toString(),
             style: TextStyle(
-              color: Colors.black26,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              color: isOverProgress ? Colors.white : Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
           ),
           textDirection: TextDirection.ltr,
         );
         textPainter.layout();
         
-        final numberRadius = radius - 35;
+        final numberRadius = radius - 45;
         final x = center.dx + numberRadius * math.cos(angle) - textPainter.width / 2;
         final y = center.dy + numberRadius * math.sin(angle) - textPainter.height / 2;
         
@@ -183,28 +207,11 @@ class CustomTimerPainter extends CustomPainter {
       }
     }
 
-    // Draw progress line
-    final progressPaint = Paint()
-      ..color = isRunning ? Colors.red : Colors.red[400]!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    final angle = 2 * math.pi * progress - math.pi / 2;
-    canvas.drawLine(
-      center,
-      Offset(
-        center.dx + (radius - 10) * math.cos(angle),
-        center.dy + (radius - 10) * math.sin(angle),
-      ),
-      progressPaint,
-    );
-
-    // Draw center dot
+    // Draw center circle
     final centerDotPaint = Paint()
-      ..color = Colors.red
+      ..color = Colors.black
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 4, centerDotPaint);
+    canvas.drawCircle(center, 15, centerDotPaint);
   }
 
   @override
