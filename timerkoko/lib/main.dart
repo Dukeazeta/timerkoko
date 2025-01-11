@@ -53,24 +53,29 @@ class TimerScreen extends StatelessWidget {
                 children: [
                   Text(
                     '${controller.selectedMinutes}',
-                    style: const TextStyle(
+                    style: GoogleFonts.spaceGrotesk(
                       fontSize: 72,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'MIN',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2,
+                      color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  const SizedBox(height: 4),
+                  Text(
                     'SETUP TIME',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1,
+                      color: Colors.black38,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -131,70 +136,75 @@ class CustomTimerPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Draw background circle
-    final bgPaint = Paint()
-      ..color = Colors.grey[200]!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 15;
-
-    canvas.drawCircle(center, radius - 10, bgPaint);
-
-    // Draw progress arc
-    final progressPaint = Paint()
-      ..color = isRunning ? Colors.red : Colors.red[400]!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 15
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius - 10),
-      -math.pi / 2,
-      2 * math.pi * progress,
-      true,
-      progressPaint,
-    );
-
     // Draw minute markers
+    final markerPaint = Paint()
+      ..color = Colors.black12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
     for (var i = 0; i < 60; i++) {
       final angle = i * (2 * math.pi / 60) - math.pi / 2;
       final markerLength = i % 5 == 0 ? 15.0 : 8.0;
-      final markerWidth = i % 5 == 0 ? 2.0 : 1.0;
-      final start = Offset(
-        center.dx + (radius - markerLength) * math.cos(angle),
-        center.dy + (radius - markerLength) * math.sin(angle),
+      final markerStart = radius - markerLength;
+      final markerEnd = radius;
+      
+      final startX = center.dx + markerStart * math.cos(angle);
+      final startY = center.dy + markerStart * math.sin(angle);
+      final endX = center.dx + markerEnd * math.cos(angle);
+      final endY = center.dy + markerEnd * math.sin(angle);
+      
+      canvas.drawLine(
+        Offset(startX, startY),
+        Offset(endX, endY),
+        markerPaint,
       );
-      final end = Offset(
-        center.dx + radius * math.cos(angle),
-        center.dy + radius * math.sin(angle),
-      );
 
-      final markerPaint = Paint()
-        ..color = Colors.black
-        ..strokeWidth = markerWidth;
-
-      canvas.drawLine(start, end, markerPaint);
-
+      // Draw minute numbers
       if (i % 5 == 0) {
+        final number = (i / 5).toInt();
         final textPainter = TextPainter(
           text: TextSpan(
-            text: '${i == 0 ? 60 : i}',
-            style: const TextStyle(
-              color: Colors.black,
+            text: number.toString(),
+            style: TextStyle(
+              color: Colors.black26,
               fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
           textDirection: TextDirection.ltr,
         );
         textPainter.layout();
-        textPainter.paint(
-          canvas,
-          Offset(
-            center.dx + (radius - 35) * math.cos(angle) - textPainter.width / 2,
-            center.dy + (radius - 35) * math.sin(angle) - textPainter.height / 2,
-          ),
-        );
+        
+        final numberRadius = radius - 35;
+        final x = center.dx + numberRadius * math.cos(angle) - textPainter.width / 2;
+        final y = center.dy + numberRadius * math.sin(angle) - textPainter.height / 2;
+        
+        textPainter.paint(canvas, Offset(x, y));
       }
     }
+
+    // Draw progress line
+    final progressPaint = Paint()
+      ..color = isRunning ? Colors.red : Colors.red[400]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    final angle = 2 * math.pi * progress - math.pi / 2;
+    canvas.drawLine(
+      center,
+      Offset(
+        center.dx + (radius - 10) * math.cos(angle),
+        center.dy + (radius - 10) * math.sin(angle),
+      ),
+      progressPaint,
+    );
+
+    // Draw center dot
+    final centerDotPaint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, 4, centerDotPaint);
   }
 
   @override
