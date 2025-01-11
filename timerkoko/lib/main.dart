@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,15 +38,37 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TimerScreen extends StatelessWidget {
+class TimerScreen extends StatefulWidget {
   const TimerScreen({super.key});
+
+  @override
+  State<TimerScreen> createState() => _TimerScreenState();
+}
+
+class _TimerScreenState extends State<TimerScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _spinAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _spinAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 60),
+    );
+  }
+
+  @override
+  void dispose() {
+    _spinAnimationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: GetBuilder<TimerController>(
-        init: TimerController(),
+        init: TimerController(spinAnimationController: _spinAnimationController),
         builder: (controller) {
           return SafeArea(
             child: Center(
@@ -89,6 +113,7 @@ class TimerScreen extends StatelessWidget {
                           painter: CustomTimerPainter(
                             progress: controller.progress,
                             isRunning: controller.isRunning,
+                            spinAnimation: _spinAnimationController,
                           ),
                           size: const Size(300, 300),
                         ),
@@ -131,11 +156,13 @@ class TimerScreen extends StatelessWidget {
 class CustomTimerPainter extends CustomPainter {
   final double progress;
   final bool isRunning;
+  final Animation<double> spinAnimation;
 
   CustomTimerPainter({
     required this.progress,
     required this.isRunning,
-  });
+    required this.spinAnimation,
+  }) : super(repaint: spinAnimation);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -147,6 +174,13 @@ class CustomTimerPainter extends CustomPainter {
       ..color = isRunning ? Colors.red : Colors.red[400]!
       ..style = PaintingStyle.fill;
 
+    final rotationAngle = isRunning ? spinAnimation.value * 2 * math.pi : 0.0;
+    
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotationAngle);
+    canvas.translate(-center.dx, -center.dy);
+
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius - 15),
       -math.pi / 2,
@@ -155,57 +189,31 @@ class CustomTimerPainter extends CustomPainter {
       progressPaint,
     );
 
-    // Draw minute markers
-    final markerPaint = Paint()
-      ..color = Colors.black87
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
-
-    for (var i = 0; i < 60; i++) {
-      final angle = i * (2 * math.pi / 60) - math.pi / 2;
-      final markerLength = i % 5 == 0 ? 20.0 : 10.0;
-      final markerStart = radius - markerLength;
-      final markerEnd = radius;
-      
-      final startX = center.dx + markerStart * math.cos(angle);
-      final startY = center.dy + markerStart * math.sin(angle);
-      final endX = center.dx + markerEnd * math.cos(angle);
-      final endY = center.dy + markerEnd * math.sin(angle);
-      
-      // Use white color for markers over the red progress area
-      final markerAngle = (angle + math.pi / 2) / (2 * math.pi);
-      final isOverProgress = markerAngle <= progress;
-      markerPaint.color = isOverProgress ? Colors.white : Colors.black87;
-      
-      canvas.drawLine(
-        Offset(startX, startY),
-        Offset(endX, endY),
-        markerPaint..strokeWidth = i % 5 == 0 ? 3.0 : 2.5,
-      );
-
-      // Draw minute numbers
-      if (i % 5 == 0) {
-        final number = (i / 5).toInt();
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: number.toString(),
-            style: TextStyle(
-              color: isOverProgress ? Colors.white : Colors.black87,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+    // Draw numbers
+    for (var i = 0; i < 12; i++) {
+      final angle = i * (2 * math.pi / 12) - math.pi / 2;
+      final number = (i * 5).toString();
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: number,
+          style: TextStyle(
+            color: _isOverProgress(angle, progress) ? Colors.white : Colors.black87,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
-          textDirection: TextDirection.ltr,
-        );
-        textPainter.layout();
-        
-        final numberRadius = radius - 45;
-        final x = center.dx + numberRadius * math.cos(angle) - textPainter.width / 2;
-        final y = center.dy + numberRadius * math.sin(angle) - textPainter.height / 2;
-        
-        textPainter.paint(canvas, Offset(x, y));
-      }
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      
+      final numberRadius = radius - 35;
+      final x = center.dx + numberRadius * math.cos(angle) - textPainter.width / 2;
+      final y = center.dy + numberRadius * math.sin(angle) - textPainter.height / 2;
+      
+      textPainter.paint(canvas, Offset(x, y));
     }
+
+    canvas.restore();
 
     // Draw center circle
     final centerDotPaint = Paint()
@@ -214,9 +222,16 @@ class CustomTimerPainter extends CustomPainter {
     canvas.drawCircle(center, 15, centerDotPaint);
   }
 
+  bool _isOverProgress(double angle, double progress) {
+    final normalizedAngle = (angle + math.pi / 2) / (2 * math.pi);
+    return normalizedAngle <= progress;
+  }
+
   @override
   bool shouldRepaint(CustomTimerPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.isRunning != isRunning;
+    return oldDelegate.progress != progress || 
+           oldDelegate.isRunning != isRunning ||
+           oldDelegate.spinAnimation.value != spinAnimation.value;
   }
 }
 
@@ -225,6 +240,11 @@ class TimerController extends GetxController {
   bool isRunning = false;
   double progress = 0.0;
   int remainingSeconds = 0;
+  late AnimationController spinAnimationController;
+
+  TimerController({required AnimationController spinAnimationController}) {
+    this.spinAnimationController = spinAnimationController;
+  }
 
   void onPanUpdate(DragUpdateDetails details) {
     if (isRunning) return;
@@ -242,32 +262,33 @@ class TimerController extends GetxController {
     update();
   }
 
+  void startTimer() {
+    if (remainingSeconds > 0) {
+      isRunning = true;
+      spinAnimationController.repeat();
+      Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (remainingSeconds > 0 && isRunning) {
+          remainingSeconds--;
+          progress = 1 - (remainingSeconds / (selectedMinutes * 60));
+          update();
+        } else {
+          timer.cancel();
+          isRunning = false;
+          spinAnimationController.stop();
+          spinAnimationController.reset();
+          update();
+        }
+      });
+    }
+  }
+
   void toggleTimer() {
-    if (selectedMinutes == 0) return;
-    
-    isRunning = !isRunning;
     if (isRunning) {
+      isRunning = false;
+      spinAnimationController.stop();
+    } else {
       startTimer();
     }
     update();
-  }
-
-  void startTimer() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!isRunning) return false;
-      
-      remainingSeconds--;
-      progress = remainingSeconds / (selectedMinutes * 60);
-      
-      if (remainingSeconds <= 0) {
-        isRunning = false;
-        selectedMinutes = 0;
-        progress = 0.0;
-      }
-      
-      update();
-      return remainingSeconds > 0;
-    });
   }
 }
