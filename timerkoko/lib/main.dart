@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
+import 'package:url_launcher/url_launcher.dart';
 import 'screens/timer_screen.dart';
 
 void main() {
@@ -33,6 +34,14 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
       ),
+      darkTheme: ThemeData(
+        textTheme: GoogleFonts.spaceGroteskTextTheme(),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.red,
+          brightness: Brightness.dark,
+        ),
+      ),
+      themeMode: ThemeMode.system,
       home: const TimerScreen(),
     );
   }
@@ -48,6 +57,7 @@ class TimerScreen extends StatefulWidget {
 class _TimerScreenState extends State<TimerScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _spinAnimationController;
+  bool isDarkMode = false;
 
   @override
   void initState() {
@@ -58,40 +68,113 @@ class _TimerScreenState extends State<TimerScreen>
     );
   }
 
-  @override
-  void dispose() {
-    _spinAnimationController.dispose();
-    super.dispose();
+  void _openSettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Settings',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.close,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: Icon(
+                isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+              title: Text(
+                'Dark Mode',
+                style: GoogleFonts.spaceGrotesk(
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                ),
+              ),
+              trailing: Switch(
+                value: isDarkMode,
+                onChanged: (value) {
+                  setState(() {
+                    isDarkMode = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: Text(
+                'Source Code',
+                style: GoogleFonts.spaceGrotesk(),
+              ),
+              onTap: () {
+                launchUrl(Uri.parse(
+                    'https://github.com/yourusername/timerkoko'));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
       body: GetBuilder<TimerController>(
-        init:
-            TimerController(spinAnimationController: _spinAnimationController),
+        init: TimerController(spinAnimationController: _spinAnimationController),
         builder: (controller) {
           return SafeArea(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${controller.selectedMinutes}',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 96,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    'MIN',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 2,
-                      color: Colors.black87,
+                  GestureDetector(
+                    onTap: _openSettings,
+                    child: Column(
+                      children: [
+                        Text(
+                          '${controller.selectedMinutes}',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 96,
+                            fontWeight: FontWeight.w600,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'MIN',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 2,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -101,7 +184,7 @@ class _TimerScreenState extends State<TimerScreen>
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1,
-                      color: Colors.black38,
+                      color: isDarkMode ? Colors.white54 : Colors.black38,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -118,6 +201,7 @@ class _TimerScreenState extends State<TimerScreen>
                             isSettingTime: controller.isSettingTime,
                             spinAnimation: _spinAnimationController,
                             setupRotation: controller.setupRotation,
+                            isDarkMode: isDarkMode,
                           ),
                           size: const Size(300, 300),
                         ),
@@ -139,10 +223,10 @@ class _TimerScreenState extends State<TimerScreen>
                                 ? Icons.pause
                                 : Icons.play_arrow,
                             size: 32,
-                            color: Colors.white,
+                            color: isDarkMode ? Colors.white : Colors.black,
                           ),
                           style: IconButton.styleFrom(
-                            backgroundColor: Colors.black,
+                            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.black,
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(48, 48),
                           ),
@@ -167,6 +251,7 @@ class CustomTimerPainter extends CustomPainter {
   final bool isSettingTime;
   final Animation<double> spinAnimation;
   final double setupRotation;
+  final bool isDarkMode;
 
   CustomTimerPainter({
     required this.progress,
@@ -174,6 +259,7 @@ class CustomTimerPainter extends CustomPainter {
     required this.isSettingTime,
     required this.spinAnimation,
     required this.setupRotation,
+    required this.isDarkMode,
   }) : super(repaint: spinAnimation);
 
   @override
@@ -188,6 +274,34 @@ class CustomTimerPainter extends CustomPainter {
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotationAngle);
     canvas.translate(-center.dx, -center.dy);
+
+    // Draw minute marks
+    final minuteMarkPaint = Paint()
+      ..color = isDarkMode ? Colors.white12 : Colors.black12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    for (var i = 0; i < 60; i++) {
+      final angle = i * (2 * math.pi / 60) - math.pi / 2;
+      final outerRadius = radius - 15;
+      final innerRadius = radius - 25;
+      
+      final startX = center.dx + innerRadius * math.cos(angle);
+      final startY = center.dy + innerRadius * math.sin(angle);
+      final endX = center.dx + outerRadius * math.cos(angle);
+      final endY = center.dy + outerRadius * math.sin(angle);
+      
+      final isOverProgress = (isSettingTime || isRunning) && 
+          _isOverProgress(angle, progress);
+      minuteMarkPaint.color = isOverProgress ? Colors.white54 : 
+          (isDarkMode ? Colors.white12 : Colors.black12);
+      
+      canvas.drawLine(
+        Offset(startX, startY),
+        Offset(endX, endY),
+        minuteMarkPaint,
+      );
+    }
 
     // Only draw progress arc if setting time or running
     if (isSettingTime || isRunning) {
@@ -212,10 +326,9 @@ class CustomTimerPainter extends CustomPainter {
         text: TextSpan(
           text: number,
           style: TextStyle(
-            color:
-                (isSettingTime || isRunning) && _isOverProgress(angle, progress)
-                    ? Colors.white
-                    : Colors.black87,
+            color: (isSettingTime || isRunning) && _isOverProgress(angle, progress)
+                ? Colors.white
+                : (isDarkMode ? Colors.white70 : Colors.black87),
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -237,7 +350,7 @@ class CustomTimerPainter extends CustomPainter {
 
     // Draw center circle
     final centerDotPaint = Paint()
-      ..color = Colors.black
+      ..color = isDarkMode ? Colors.white : Colors.black
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, 15, centerDotPaint);
   }
@@ -253,7 +366,8 @@ class CustomTimerPainter extends CustomPainter {
         oldDelegate.isRunning != isRunning ||
         oldDelegate.isSettingTime != isSettingTime ||
         oldDelegate.spinAnimation.value != spinAnimation.value ||
-        oldDelegate.setupRotation != setupRotation;
+        oldDelegate.setupRotation != setupRotation ||
+        oldDelegate.isDarkMode != isDarkMode;
   }
 }
 
