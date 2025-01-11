@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        textTheme: GoogleFonts.getTextTheme('Clash Display'),
+        textTheme: GoogleFonts.spaceGroteskTextTheme(),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.red,
           brightness: Brightness.light,
@@ -135,17 +135,19 @@ class CustomTimerPainter extends CustomPainter {
     final bgPaint = Paint()
       ..color = Colors.grey[200]!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 15;
 
-    canvas.drawCircle(center, radius, bgPaint);
+    canvas.drawCircle(center, radius - 10, bgPaint);
 
     // Draw progress arc
     final progressPaint = Paint()
       ..color = isRunning ? Colors.red : Colors.red[400]!
-      ..style = PaintingStyle.fill;
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 15
+      ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
+      Rect.fromCircle(center: center, radius: radius - 10),
       -math.pi / 2,
       2 * math.pi * progress,
       true,
