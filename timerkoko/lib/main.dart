@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
 import 'package:url_launcher/url_launcher.dart';
@@ -38,14 +37,22 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        textTheme: GoogleFonts.spaceGroteskTextTheme(ThemeData.light().textTheme),
+        textTheme: const TextTheme().copyWith(
+          bodyLarge: const TextStyle(fontFamily: 'ClashGrotesk'),
+          bodyMedium: const TextStyle(fontFamily: 'ClashGrotesk'),
+          titleLarge: const TextStyle(fontFamily: 'ClashGrotesk'),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.red,
           brightness: Brightness.light,
         ),
       ),
       darkTheme: ThemeData(
-        textTheme: GoogleFonts.spaceGroteskTextTheme(ThemeData.dark().textTheme),
+        textTheme: const TextTheme().copyWith(
+          bodyLarge: const TextStyle(fontFamily: 'ClashGrotesk'),
+          bodyMedium: const TextStyle(fontFamily: 'ClashGrotesk'),
+          titleLarge: const TextStyle(fontFamily: 'ClashGrotesk'),
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.red,
           brightness: Brightness.dark,
@@ -96,7 +103,8 @@ class _TimerScreenState extends State<TimerScreen>
               children: [
                 Text(
                   'Settings',
-                  style: GoogleFonts.spaceGrotesk(
+                  style: TextStyle(
+                    fontFamily: 'ClashGrotesk',
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
@@ -119,7 +127,8 @@ class _TimerScreenState extends State<TimerScreen>
               ),
               title: Text(
                 'Dark Mode',
-                style: GoogleFonts.spaceGrotesk(
+                style: TextStyle(
+                  fontFamily: 'ClashGrotesk',
                   color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
                 ),
               ),
@@ -134,7 +143,9 @@ class _TimerScreenState extends State<TimerScreen>
               leading: const Icon(Icons.code),
               title: Text(
                 'Source Code',
-                style: GoogleFonts.spaceGrotesk(),
+                style: TextStyle(
+                  fontFamily: 'ClashGrotesk',
+                ),
               ),
               onTap: () {
                 launchUrl(Uri.parse(
@@ -165,7 +176,8 @@ class _TimerScreenState extends State<TimerScreen>
                       children: [
                         Text(
                           '${controller.selectedMinutes}',
-                          style: GoogleFonts.spaceGrotesk(
+                          style: TextStyle(
+                            fontFamily: 'ClashGrotesk',
                             fontSize: 120,
                             fontWeight: FontWeight.w800,
                             color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
@@ -173,7 +185,8 @@ class _TimerScreenState extends State<TimerScreen>
                         ),
                         Text(
                           'MIN',
-                          style: GoogleFonts.spaceGrotesk(
+                          style: TextStyle(
+                            fontFamily: 'ClashGrotesk',
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 2,
@@ -186,7 +199,8 @@ class _TimerScreenState extends State<TimerScreen>
                   const SizedBox(height: 4),
                   Text(
                     'SETUP TIME',
-                    style: GoogleFonts.spaceGrotesk(
+                    style: TextStyle(
+                      fontFamily: 'ClashGrotesk',
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1,
@@ -334,6 +348,7 @@ class CustomTimerPainter extends CustomPainter {
         text: TextSpan(
           text: number,
           style: TextStyle(
+            fontFamily: 'ClashGrotesk',
             color: (isSettingTime || isRunning) && _isOverProgress(angle, progress)
                 ? Colors.white
                 : (isDarkMode ? Colors.white70 : Colors.black87),
