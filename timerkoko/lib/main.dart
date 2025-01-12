@@ -8,6 +8,15 @@ import 'dart:math' as math;
 import 'package:url_launcher/url_launcher.dart';
 import 'screens/timer_screen.dart';
 
+class ThemeController extends GetxController {
+  var isDarkMode = false.obs;
+
+  void toggleTheme() {
+    isDarkMode.value = !isDarkMode.value;
+    Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
+  }
+}
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -17,6 +26,7 @@ void main() {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+  Get.put(ThemeController());
   runApp(const MyApp());
 }
 
@@ -28,20 +38,20 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        textTheme: GoogleFonts.spaceGroteskTextTheme(),
+        textTheme: GoogleFonts.spaceGroteskTextTheme(ThemeData.light().textTheme),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.red,
           brightness: Brightness.light,
         ),
       ),
       darkTheme: ThemeData(
-        textTheme: GoogleFonts.spaceGroteskTextTheme(),
+        textTheme: GoogleFonts.spaceGroteskTextTheme(ThemeData.dark().textTheme),
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.red,
           brightness: Brightness.dark,
         ),
       ),
-      themeMode: ThemeMode.system,
+      themeMode: Get.find<ThemeController>().isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
       home: const TimerScreen(),
     );
   }
@@ -57,7 +67,7 @@ class TimerScreen extends StatefulWidget {
 class _TimerScreenState extends State<TimerScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _spinAnimationController;
-  bool isDarkMode = false;
+  final ThemeController _themeController = Get.put(ThemeController());
 
   @override
   void initState() {
@@ -75,7 +85,7 @@ class _TimerScreenState extends State<TimerScreen>
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[900] : Colors.white,
+          color: _themeController.isDarkMode.value ? Colors.grey[900] : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -89,13 +99,13 @@ class _TimerScreenState extends State<TimerScreen>
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: isDarkMode ? Colors.white : Colors.black87,
+                    color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
                   ),
                 ),
                 IconButton(
                   icon: Icon(
                     Icons.close,
-                    color: isDarkMode ? Colors.white : Colors.black87,
+                    color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
                   ),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -104,22 +114,19 @@ class _TimerScreenState extends State<TimerScreen>
             const SizedBox(height: 24),
             ListTile(
               leading: Icon(
-                isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                color: isDarkMode ? Colors.white : Colors.black87,
+                _themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode,
+                color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
               ),
               title: Text(
                 'Dark Mode',
                 style: GoogleFonts.spaceGrotesk(
-                  color: isDarkMode ? Colors.white : Colors.black87,
+                  color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
                 ),
               ),
               trailing: Switch(
-                value: isDarkMode,
+                value: _themeController.isDarkMode.value,
                 onChanged: (value) {
-                  setState(() {
-                    isDarkMode = value;
-                  });
-                  Navigator.pop(context);
+                  _themeController.toggleTheme();
                 },
               ),
             ),
@@ -142,9 +149,8 @@ class _TimerScreenState extends State<TimerScreen>
 
   @override
   Widget build(BuildContext context) {
-    isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: _themeController.isDarkMode.value ? Colors.grey[900] : Colors.grey[50],
       body: GetBuilder<TimerController>(
         init: TimerController(spinAnimationController: _spinAnimationController),
         builder: (controller) {
@@ -160,9 +166,9 @@ class _TimerScreenState extends State<TimerScreen>
                         Text(
                           '${controller.selectedMinutes}',
                           style: GoogleFonts.spaceGrotesk(
-                            fontSize: 96,
-                            fontWeight: FontWeight.w700,
-                            color: isDarkMode ? Colors.white : Colors.black87,
+                            fontSize: 120,
+                            fontWeight: FontWeight.w800,
+                            color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
                           ),
                         ),
                         Text(
@@ -171,7 +177,7 @@ class _TimerScreenState extends State<TimerScreen>
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 2,
-                            color: isDarkMode ? Colors.white : Colors.black87,
+                            color: _themeController.isDarkMode.value ? Colors.white : Colors.black87,
                           ),
                         ),
                       ],
@@ -184,7 +190,7 @@ class _TimerScreenState extends State<TimerScreen>
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1,
-                      color: isDarkMode ? Colors.white54 : Colors.black38,
+                      color: _themeController.isDarkMode.value ? Colors.white54 : Colors.black38,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -201,7 +207,7 @@ class _TimerScreenState extends State<TimerScreen>
                             isSettingTime: controller.isSettingTime,
                             spinAnimation: _spinAnimationController,
                             setupRotation: controller.setupRotation,
-                            isDarkMode: isDarkMode,
+                            isDarkMode: _themeController.isDarkMode.value,
                           ),
                           size: const Size(300, 300),
                         ),
@@ -223,12 +229,12 @@ class _TimerScreenState extends State<TimerScreen>
                                 ? Icons.pause
                                 : Icons.play_arrow,
                             size: 32,
-                            color: isDarkMode ? Colors.white : Colors.black,
+                            color: _themeController.isDarkMode.value ? Colors.white : Colors.white,
                           ),
                           style: IconButton.styleFrom(
-                            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.black,
+                            backgroundColor: _themeController.isDarkMode.value ? Colors.grey[800] : Colors.red[400],
                             padding: EdgeInsets.zero,
-                            minimumSize: const Size(48, 48),
+                            minimumSize: const Size(56, 56),
                           ),
                           onPressed: controller.toggleTimer,
                         ),
@@ -279,12 +285,12 @@ class CustomTimerPainter extends CustomPainter {
     final minuteMarkPaint = Paint()
       ..color = isDarkMode ? Colors.white12 : Colors.black12
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+      ..strokeWidth = 2.5;
 
     for (var i = 0; i < 60; i++) {
       final angle = i * (2 * math.pi / 60) - math.pi / 2;
       final outerRadius = radius - 15;
-      final innerRadius = radius - 25;
+      final innerRadius = i % 5 == 0 ? radius - 30 : radius - 25;
       
       final startX = center.dx + innerRadius * math.cos(angle);
       final startY = center.dy + innerRadius * math.sin(angle);
@@ -293,8 +299,10 @@ class CustomTimerPainter extends CustomPainter {
       
       final isOverProgress = (isSettingTime || isRunning) && 
           _isOverProgress(angle, progress);
-      minuteMarkPaint.color = isOverProgress ? Colors.white54 : 
-          (isDarkMode ? Colors.white12 : Colors.black12);
+      minuteMarkPaint.color = isOverProgress ? 
+          (isDarkMode ? Colors.white : Colors.black87) : 
+          (isDarkMode ? Colors.white24 : Colors.black26);
+      minuteMarkPaint.strokeWidth = i % 5 == 0 ? 3.0 : 2.5;
       
       canvas.drawLine(
         Offset(startX, startY),
