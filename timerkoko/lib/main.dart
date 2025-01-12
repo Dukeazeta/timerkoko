@@ -161,7 +161,7 @@ class _TimerScreenState extends State<TimerScreen>
                           '${controller.selectedMinutes}',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 96,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: isDarkMode ? Colors.white : Colors.black87,
                           ),
                         ),
