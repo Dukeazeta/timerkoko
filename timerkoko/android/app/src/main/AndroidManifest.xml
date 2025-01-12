@@ -2,7 +2,7 @@
     <application
         android:label="Timer Koko"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/timerkoko">
         <activity
             android:name=".MainActivity"
             android:exported="true"
