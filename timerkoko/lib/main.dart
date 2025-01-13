@@ -149,7 +149,7 @@ class _TimerScreenState extends State<TimerScreen>
               ),
               onTap: () {
                 launchUrl(Uri.parse(
-                    'https://github.com/yourusername/timerkoko'));
+                    'https://github.com/Dukeazeta/timerkoko'));
               },
             ),
           ],
